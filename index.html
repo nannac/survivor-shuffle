@@ -13,10 +13,11 @@
       <!-- Main Left Column -->
       <div class="flex-1 min-w-0">
         <!-- Configuration Section -->
-        <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4 mb-6 relative">
+          <button onclick="resetAll()" id="config-float-btn" class="absolute right-4 top-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-red-400 z-10">Reset</button>
           <div class="flex items-center gap-4 flex-wrap">
             <label for="team_size" class="font-medium text-gray-700">Team Size</label>
-            <select id="team_size" name="team_size" class="w-20 px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <select id="team_size" name="team_size" class="w-12 px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
               <option value="1">1</option>
               <option value="2" selected>2</option>
               <option value="3">3</option>
@@ -27,21 +28,21 @@
               <option value="8">8</option>
             </select>
             <label for="max-streak-input" class="font-medium text-gray-700">Max Streak</label>
-            <input id="max-streak-input" name="max_streak" type="text" placeholder="0 (unlimited)" class="w-32 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <input id="max-streak-input" name="max_streak" type="text" maxlength="2" placeholder="0" value="0" class="w-12 px-2 py-2 border rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-400" />
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div class="bg-white rounded-lg shadow p-4">
             <h2 class="text-xl font-semibold text-gray-800 mb-2">Team A</h2>
-            <ul id="team-a-list"></ul>
+            <ul id="team-a-list" ondrop="handleOnDrop(event)" ondragover="allowDrop(event)"></ul>
           </div>
           <div class="bg-white rounded-lg shadow p-4">
             <h2 class="text-xl font-semibold text-gray-800 mb-2">Team B</h2>
-            <ul id="team-b-list"></ul>
+            <ul id="team-b-list" ondrop="handleOnDrop(event)" ondragover="allowDrop(event)"></ul>
           </div>
           <div class="bg-white rounded-lg shadow p-4">
             <h2 class="text-xl font-semibold text-gray-800 mb-2">Queue</h2>
-            <ul id="next-up-list"></ul>
+            <ul id="queue-list" ondrop="handleOnDrop(event)" ondragover="allowDrop(event)"></ul>
           </div>
         </div>
         <div class="mb-6 flex gap-4">
@@ -77,7 +78,7 @@
         <li><b>Teams & Queue:</b> Players are assigned to Team A, Team B, or the Queue based on wins and the team size.</li>
         <li><b>Change Team Size:</b> Select the desired team size from the dropdown. Teams will rebalance automatically.</li>
         <li><b>Mark as Skip:</b> Click "Skip" on a player to temporarily remove them from teams and the queue.</li>
-        <li><b>Drag & Drop:</b> Swap players between teams and the queue by dragging one player onto another.</li>
+        <li></li>
         <li><b>Record Results:</b> Click "Team A Wins" or "Team B Wins" to record a match and update stats.</li>
         <li><b>Remove Players:</b> Click the ✕ next to a player to remove them from the app.</li>
       </ul>

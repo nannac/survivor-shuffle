@@ -1,44 +1,8 @@
+// Add dummy players for testing
+var debug = true;
+
 // Player management logic for Survivor Shuffle
 
-// Drag-and-drop handlers
-let dragSource = null;
-let dragSourceIdx = null;
-
-function onDragStart(event, source, idx) {
-    dragSource = source;
-    dragSourceIdx = idx;
-    event.dataTransfer.effectAllowed = "move";
-}
-
-function onSwapDrop(event, targetList, targetIdx) {
-    event.preventDefault();
-    if (dragSource === null || dragSourceIdx === null) return;
-    if (dragSource === targetList && dragSourceIdx === targetIdx) return;
-    // Find source and target arrays
-    let sourceArr, targetArr;
-    if (dragSource === 'teamA') sourceArr = teamA;
-    else if (dragSource === 'teamB') sourceArr = teamB;
-    else if (dragSource === 'queue') sourceArr = queue.filter(p => !teamA.includes(p) && !teamB.includes(p));
-    if (targetList === 'teamA') targetArr = teamA;
-    else if (targetList === 'teamB') targetArr = teamB;
-    else if (targetList === 'queue') targetArr = queue.filter(p => !teamA.includes(p) && !teamB.includes(p));
-    // Get actual indices in queue if queueToShow is used
-    let actualSourceArr = (dragSource === 'queue') ? queue : sourceArr;
-    let actualTargetArr = (targetList === 'queue') ? queue : targetArr;
-    let sourcePlayer = actualSourceArr[(dragSource === 'queue') ? queue.indexOf(sourceArr[dragSourceIdx]) : dragSourceIdx];
-    let targetPlayer = actualTargetArr[(targetList === 'queue') ? queue.indexOf(targetArr[targetIdx]) : targetIdx];
-    // Swap
-    if (sourcePlayer && targetPlayer) {
-        let sourceIdx = actualSourceArr.indexOf(sourcePlayer);
-        let targetIdx2 = actualTargetArr.indexOf(targetPlayer);
-        actualSourceArr[sourceIdx] = targetPlayer;
-        actualTargetArr[targetIdx2] = sourcePlayer;
-    }
-    dragSource = null;
-    dragSourceIdx = null;
-    renderPlayers();
-    renderTeams();
-}
 
 
 function adjustTeamsForTeamSize() {
@@ -73,8 +37,7 @@ function adjustTeamsForTeamSize() {
         }
         idx++;
     }
-    renderPlayers();
-    renderTeams();
+    render();
 }
 
 function handleTeamWin(winningTeam) {
@@ -121,8 +84,7 @@ function handleTeamWin(winningTeam) {
         }
         idx++;
     }
-    renderPlayers();
-    renderTeams();
+    render();
 }
 
 const players = [];
@@ -130,37 +92,59 @@ let queue = [];
 let teamA = [];
 let teamB = [];
 
-function renderPlayers() {
+function render() {
+    // Render Players
     const playersList = document.getElementById('players-list');
     playersList.innerHTML = '';
     if (players.length === 0) {
         playersList.innerHTML = '<li class="text-gray-400 text-center py-4">No players yet.</li>';
-        return;
+    } else {
+        players.forEach((player, idx) => {
+            playersList.innerHTML += `
+                <li class="flex items-center justify-between py-2 border-b last:border-b-0" data-index="${idx}">
+                    <span class="font-medium w-24">${player.name}</span>
+                    <div class="flex items-center gap-4 text-xs">
+                        <div class="flex flex-col items-center">
+                            <span class="font-semibold text-green-700">Wins</span>
+                            <span class="font-bold">${player.wins}</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="font-semibold text-red-700">Losses</span>
+                            <span class="font-bold">${player.losses}</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="font-semibold text-blue-700">Streak</span>
+                            <span class="font-bold">${player.streak}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1 rounded-full text-xs font-semibold focus:outline-none ${player.skip ? 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" onclick="toggleSkip(${idx})">Skip</button>
+                        <button class="px-2 py-1 rounded-full text-xs font-semibold bg-red-200 text-red-800 hover:bg-red-300 focus:outline-none" onclick="removePlayer(${idx})">✕</button>
+                    </div>
+                </li>
+            `;
+        });
     }
-    players.forEach((player, idx) => {
-        playersList.innerHTML += `
-            <li class="flex items-center justify-between py-2 border-b last:border-b-0">
-                <span class="font-medium w-24">${player.name}</span>
-                <div class="flex items-center gap-4 text-xs">
-                    <div class="flex flex-col items-center">
-                        <span class="font-semibold text-green-700">Wins</span>
-                        <span class="font-bold">${player.wins}</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <span class="font-semibold text-red-700">Losses</span>
-                        <span class="font-bold">${player.losses}</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <span class="font-semibold text-blue-700">Streak</span>
-                        <span class="font-bold">${player.streak}</span>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button class="px-3 py-1 rounded-full text-xs font-semibold focus:outline-none ${player.skip ? 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" onclick="toggleSkip(${idx})">Skip</button>
-                    <button class="px-2 py-1 rounded-full text-xs font-semibold bg-red-200 text-red-800 hover:bg-red-300 focus:outline-none" onclick="removePlayer(${idx})">✕</button>
-                </div>
-            </li>
-        `;
+
+    // Render Teams
+    const teamAList = document.getElementById('team-a-list');
+    const teamBList = document.getElementById('team-b-list');
+    const queueList = document.getElementById('queue-list');
+    teamAList.innerHTML = '';
+    teamBList.innerHTML = '';
+    queueList.innerHTML = '';
+    teamA.forEach((player, idx) => {
+        teamAList.innerHTML += `<li class="py-1 text-blue-800" data-array="teamA" data-index="${idx}" draggable="true" ondragstart="handleOnDrag(event)">${player.name}</li>`;
+    });
+    teamB.forEach((player, idx) => {
+        teamBList.innerHTML += `<li class="py-1 text-blue-800" data-array="teamB" data-index="${idx}" draggable="true" ondragstart="handleOnDrag(event)">${player.name}</li>`;
+    });
+    queue.forEach((player, idx) => {
+        if (queue.length === 0) {
+            queueList.innerHTML = '<li class="text-gray-400 text-center py-4">None</li>';
+        } else {
+            queueList.innerHTML += `<li class="py-1 text-blue-800" data-array="queue" data-index="${idx}" draggable="true" ondragstart="handleOnDrag(event)">${player.name}</li>`;
+        }
     });
 }
 
@@ -174,22 +158,55 @@ function addPlayer(name) {
         skip: false
     };
     players.push(newPlayer);
-    if (!newPlayer.skip) queue.push(newPlayer);
     // Alternate add to Team A then Team B, until both teams are full
     if (teamA.length < teamSize) {
         teamA.push(newPlayer);
     } else if (teamB.length < teamSize) {
         teamB.push(newPlayer);
     }
-
-    renderPlayers();
-    renderTeams();
+    render();
 }
 
 function removePlayer(idx) {
     players.splice(idx, 1);
-    renderPlayers();
-    renderTeams();
+    render();
+}
+
+function swapPlayers(arr1, idx1, arr2, idx2) {
+    let temp = arr2[idx2];
+    arr2[idx2] = arr1[idx1];
+    arr1[idx1] = temp;
+    console.log(arr1[idx1]);
+    console.log(arr2[idx2]);
+    render();
+}
+
+function allowDrop(e) {
+    // Only allow drop on <li> elements
+    if (e.target.tagName.toLowerCase() === 'li') {
+        e.preventDefault();
+    }
+}
+
+function handleOnDrag(e) {
+    const payload = JSON.stringify({
+        arrayName: e.target.dataset.array,
+        index: parseInt(e.target.dataset.index, 10)
+    });
+    e.dataTransfer.setData('application/json', payload);
+}
+
+function handleOnDrop(e) {
+    e.preventDefault();
+    const payload = JSON.parse(e.dataTransfer.getData('application/json'));
+    const targetArrayName = e.target.dataset.array;
+    const targetIndex = parseInt(e.target.dataset.index);
+    const sourceArrayName = payload.arrayName;
+    const sourceIndex = parseInt(payload.index);
+    const arrayMap = { teamA, teamB, queue };
+    const sourceArray = arrayMap[sourceArrayName];
+    const targetArray = arrayMap[targetArrayName];
+    swapPlayers(sourceArray, sourceIndex, targetArray, targetIndex);
 }
 
 function toggleSkip(idx) {
@@ -220,36 +237,8 @@ function toggleSkip(idx) {
             queue.push(players[idx]);
         }
     }
-    renderPlayers();
-    renderTeams();
+    render();
 }
-
-function renderTeams() {
-    const teamAList = document.getElementById('team-a-list');
-    const teamBList = document.getElementById('team-b-list');
-    const queueList = document.getElementById('next-up-list'); // repurpose for queue
-    teamAList.innerHTML = '';
-    teamBList.innerHTML = '';
-    queueList.innerHTML = '';
-    // --- Drag-and-drop rendering ---
-    teamA.forEach((player, idx) => {
-        teamAList.innerHTML += `<li class="py-1 text-blue-800" draggable="true" ondragstart="onDragStart(event, 'teamA', ${idx})" ondragover="event.preventDefault()" ondrop="onSwapDrop(event, 'teamA', ${idx})">${player.name}</li>`;
-    });
-    teamB.forEach((player, idx) => {
-        teamBList.innerHTML += `<li class="py-1 text-blue-800" draggable="true" ondragstart="onDragStart(event, 'teamB', ${idx})" ondragover="event.preventDefault()" ondrop="onSwapDrop(event, 'teamB', ${idx})">${player.name}</li>`;
-    });
-    const queueToShow = queue.filter(p => !teamA.includes(p) && !teamB.includes(p));
-    if (queueToShow.length === 0) {
-        queueList.innerHTML = '<li class="text-gray-400 text-center py-4">None</li>';
-    } else {
-        queueToShow.forEach((player, idx) => {
-            queueList.innerHTML += `<li class="py-1 text-blue-800" draggable="true" ondragstart="onDragStart(event, 'queue', ${idx})" ondragover="event.preventDefault()" ondrop="onSwapDrop(event, 'queue', ${idx})">${player.name}</li>`;
-        });
-    }
-    // No list-level drop handlers for swapping
-
-}
-
 
 function startMatch() {
     // Get team size from dropdown
@@ -258,7 +247,7 @@ function startMatch() {
     const eligiblePlayers = players.filter(p => !p.sit).slice(0, teamSize * 2);
     teamA = eligiblePlayers.slice(0, teamSize);
     teamB = eligiblePlayers.slice(teamSize, teamSize * 2);
-    renderTeams();
+    render();
 }
 
 function resetAll() {
@@ -267,11 +256,21 @@ function resetAll() {
     queue.length = 0;
     teamA.length = 0;
     teamB.length = 0;
-    renderPlayers();
-    renderTeams();
+    render();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Add dummy players when debugging
+    if (debug) {
+        addPlayer("Player 1");
+        addPlayer("Player 2");
+        addPlayer("Player 3");
+        addPlayer("Player 4");
+        addPlayer("Player 5");
+        addPlayer("Player 6");
+        addPlayer("Player 7");
+        addPlayer("Player 8");
+    }
     // Help modal logic
     const helpBtn = document.getElementById('help-btn');
     const helpModal = document.getElementById('help-modal');
@@ -313,6 +312,5 @@ document.addEventListener('DOMContentLoaded', function() {
             input.focus();
         }
     });
-    renderPlayers();
-    renderTeams();
+    render();
 });
