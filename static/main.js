@@ -1,5 +1,30 @@
 // Add dummy players for testing
-var debug = true;
+var debug = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const helpBtn = document.getElementById('help-btn');
+  const helpModal = document.getElementById('help-modal');
+  const closeHelpModal = document.getElementById('close-help-modal');
+
+  if (helpBtn && helpModal) {
+    helpBtn.addEventListener('click', function() {
+      helpModal.classList.remove('hidden');
+    });
+  }
+  if (closeHelpModal && helpModal) {
+    closeHelpModal.addEventListener('click', function() {
+      helpModal.classList.add('hidden');
+    });
+  }
+  // Optional: Close modal when clicking outside modal content
+  if (helpModal) {
+    helpModal.addEventListener('click', function(e) {
+      if (e.target === helpModal) {
+        helpModal.classList.add('hidden');
+      }
+    });
+  }
+});
 
 let players = [];
 let queue = [];
@@ -9,19 +34,12 @@ let teamSize = 2;
 let maxStreak = 0;
 
 function startRound() {
-    // Check the length of the teamA and teamB arrays
-    if (teamA.length < teamSize || teamB.length < teamSize) {
-        // Move players from queue to teamA and teamB alternating until both teams are full
-        while (teamA.length < teamSize || teamB.length < teamSize) {
-            if (queue.length > 0) {
-                let player = queue.shift();
-                if (teamA.length < teamSize) {
-                    teamA.push(player);
-                } else if (teamB.length < teamSize) {
-                    teamB.push(player);
-                }
-            }
-        }
+    // Find the number of open slots in teamA and teamB
+    let openSlots = teamSize*2 - teamA.length - teamB.length;
+
+    if (openSlots > 0) {
+        alert('You must assign players to teams to start a round.')
+        return;
     }
     document.getElementById('start-round-btn').classList.add('hidden');
     document.getElementById('team-a-wins-btn').classList.remove('hidden');
@@ -32,18 +50,9 @@ function startRound() {
 
 function updateTeamSize() {
     teamSize = document.getElementById('team_size').value;
-    if (teamA.length > teamSize) {
-        while (teamA.length < teamSize) {
-            teamA.push({ id: null, name: 'Open', wins: null, losses: null, streak: null, skip: null });
-        }
-    }
-    if (teamB.length > teamSize) {
-        while (teamB.length < teamSize) {
-            teamB.push({ id: null, name: 'Open', wins: null, losses: null, streak: null, skip: null });
-        }
-    }
     renderTeams();
 }
+
 function resetAll() {
     if (!confirm('Are you sure you want to clear all players and teams?')) return;
     players.length = 0;
@@ -80,22 +89,15 @@ function removePlayer(id) {
     renderQueue();
     renderTeams();
 }
-function swapPlayers(arr1, id1, arr2, id2) {
-    const player1 = arr1.find(player => player.id === id1);
-    const player2 = arr2.find(player => player.id === id2);
-    const index1 = arr1.indexOf(player1);
-    const index2 = arr2.indexOf(player2);
-    // if arr1 is empty, add the player to arr1
-    if (arr1.length < index1) {
-        arr1.push(player2);
-    } else {
-        arr1[index1] = player2;
-    }
-    // if arr2 is empty, add the player to arr2
-    if (arr2.length < index2) {
+function swapPlayers(arr1, index1, arr2, index2) {
+    const player1 = arr1[index1];
+    if (arr2[index2] === undefined) {
         arr2.push(player1);
+        arr1.splice(index1, 1);
     } else {
+        const player2 = arr2[index2];
         arr2[index2] = player1;
+        arr1[index1] = player2;
     }
     renderPlayers();
     renderQueue();
@@ -138,9 +140,9 @@ function renderPlayers() {
           tableHTML += `
             <tr data-player-id="${player.id}" style="background: ${idx % 2 === 0 ? 'var(--ctp-base)' : 'var(--ctp-surface1)'};">
               <td class="px-3 py-2 font-medium">${player.name}</td>
-              <td class="px-3 py-2 text-center">${player.wins}</td>
-              <td class="px-3 py-2 text-center">${player.losses}</td>
-              <td class="px-3 py-2 text-center">${player.streak}</td>
+              <td class="px-3 py-2 text-center" style="color: var(--ctp-green); font-weight: bold;">${player.wins}</td>
+              <td class="px-3 py-2 text-center" style="color: var(--ctp-red); font-weight: bold;">${player.losses}</td>
+              <td class="px-3 py-2 text-center" style="color: var(--ctp-yellow); font-weight: bold;">${player.streak}</td>
               <td class="px-3 py-2 text-center">
                 <button class="mr-2 focus:outline-none skip-btn" onclick="toggleSkip(${player.id})" title="Skip player" aria-label="Skip player" style="background:none;border:none;padding:0;cursor:pointer;">
                   <span class="material-icons ${player.skip ? 'text-yellow-700' : 'text-text'} transition-colors" style="font-size:1.8em; vertical-align:middle;">skip_next</span>
@@ -190,60 +192,57 @@ function renderTeams() {
     const teamBList = document.getElementById('team-b-list');
     teamAList.innerHTML = '';
     teamBList.innerHTML = '';
-
+    teamA.forEach((player) => {
+        const li = document.createElement('li');
+        li.classList.add('ctp-li', 'queue-li');
+        li.setAttribute('draggable', 'true');
+        li.setAttribute('ondragstart', 'handleOnDrag(event)')
+        li.setAttribute('data-player-id', player.id);
+        li.setAttribute('data-array', 'teamA');
+        li.textContent = player.name;
+        li.addEventListener('dragstart', () => {
+            li.classList.add('ctp-li-dragging');
+        });
+        li.addEventListener('dragend', () => {
+            li.classList.remove('ctp-li-dragging');
+        });
+        teamAList.appendChild(li);
+    });
     if (teamA.length < teamSize) {
-        for (let i = 0; i < teamSize; i++) {
+        for (let i = teamA.length; i < teamSize; i++) {
             const li = document.createElement('li');
             li.classList.add('drag-placeholder');
-            li.textContent = 'Open';    
+            li.setAttribute('data-player-id', null);
             li.setAttribute('data-array', 'teamA');
-            li.setAttribute('data-player-id', i);
+            li.textContent = 'Open';
             teamAList.appendChild(li);
         }
-    } else {
-        teamA.forEach((player) => {
-            const li = document.createElement('li');
-            li.classList.add('ctp-li', 'team-li');
-            li.setAttribute('draggable', 'true');
-            li.setAttribute('ondragstart', 'handleOnDrag(event)')
-            li.setAttribute('data-player-id', player.id);
-            li.setAttribute('data-array', 'teamA');
-            li.textContent = player.name;
-            li.addEventListener('dragstart', () => {
-                li.classList.add('ctp-li-dragging');
-            });
-            li.addEventListener('dragend', () => {
-                li.classList.remove('ctp-li-dragging');
-            });
-            teamAList.appendChild(li);
-        });
     }
+    teamB.forEach((player) => {
+        const li = document.createElement('li');
+        li.classList.add('ctp-li', 'queue-li');
+        li.setAttribute('draggable', 'true');
+        li.setAttribute('ondragstart', 'handleOnDrag(event)')
+        li.setAttribute('data-player-id', player.id);
+        li.setAttribute('data-array', 'teamB');
+        li.textContent = player.name;
+        li.addEventListener('dragstart', () => {
+            li.classList.add('ctp-li-dragging');
+        });
+        li.addEventListener('dragend', () => {
+            li.classList.remove('ctp-li-dragging');
+        });
+        teamBList.appendChild(li);
+    });
     if (teamB.length < teamSize) {
-        for (let i = 0; i < teamSize; i++) {
+        for (let i = teamB.length; i < teamSize; i++) {
             const li = document.createElement('li');
             li.classList.add('drag-placeholder');
-            li.textContent = 'Open';    
+            li.setAttribute('data-player-id', null);
             li.setAttribute('data-array', 'teamB');
-            li.setAttribute('data-player-id', i);
+            li.textContent = 'Open';
             teamBList.appendChild(li);
         }
-    } else {
-        teamB.forEach((player) => {
-            const li = document.createElement('li');
-            li.classList.add('ctp-li', 'team-li');
-            li.setAttribute('draggable', 'true');
-            li.setAttribute('ondragstart', 'handleOnDrag(event)')
-            li.setAttribute('data-player-id', player.id);
-            li.setAttribute('data-array', 'teamB');
-            li.textContent = player.name;
-            li.addEventListener('dragstart', () => {
-                li.classList.add('ctp-li-dragging');
-            });
-            li.addEventListener('dragend', () => {
-                li.classList.remove('ctp-li-dragging');
-            });
-            teamBList.appendChild(li);
-        });
     }
 }
 
@@ -269,42 +268,76 @@ document.addEventListener('dragleave', function(e) {
 
 function handleOnDrag(e) {
     e.target.classList.add('ctp-li-dragging');
+    const parent = e.target.parentElement;
+    const children = Array.from(parent.children);
+    const index = children.indexOf(e.target);
     const payload = JSON.stringify({
         arrayName: e.target.dataset.array,
-        playerId: parseInt(e.target.dataset.playerId, 10)
+        index: index
     });
     e.dataTransfer.setData('application/json', payload);
 }
-
-document.addEventListener('dragend', function(e) {
-    if (e.target.tagName && e.target.tagName.toLowerCase() === 'li') {
-        e.target.classList.remove('ctp-li-dragging');
-    }
-}, true);
 
 function handleOnDrop(e) {
     e.preventDefault();
     const payload = JSON.parse(e.dataTransfer.getData('application/json'));
     const targetArrayName = e.target.dataset.array;
-    let targetplayerId = parseInt(e.target.dataset.playerId);
-    if (targetplayerId === null) {
-        targetplayerId = targetArray.length;
-    }
-    const sourceArrayName = payload.arrayName;
-    const sourceplayerId = parseInt(payload.playerId);
     const arrayMap = { teamA, teamB, queue };
+    const sourceArrayName = payload.arrayName;
     const sourceArray = arrayMap[sourceArrayName];
     const targetArray = arrayMap[targetArrayName];
-    swapPlayers(sourceArray, sourceplayerId, targetArray, targetplayerId);
+    const parent = e.target.parentElement;
+    const children = Array.from(parent.children);
+    const targetIndex = children.indexOf(e.target);
+    const sourceIndex = payload.index;
+    swapPlayers(sourceArray, sourceIndex, targetArray, targetIndex);
 }
 
-function handleTeamWin(winningTeam) {
-    
+function handleTeamWin(teamName) {
+    const [winningTeam, losingTeam] = teamName === 'teamA' ? [teamA, teamB] : [teamB, teamA];
+    losingTeam.forEach(player => {
+        player.losses++;
+        player.streak = 0;
+        queue.push(player);
+    });
+    losingTeam.length = 0;
+    winningTeam.forEach((player, i) => {
+        player.wins++;
+        player.streak++;
+        // alternate winning players to different teams
+        if (teamA.includes(player)) {
+            teamB.push(player);
+            teamA.splice(teamA.indexOf(player), 1);
+        } else {
+            teamA.push(player);
+            teamB.splice(teamB.indexOf(player), 1);
+        }
+    });
+    // While either teamA or teamB has less than teamSize players, move players from queue to fill the gap
+    while (teamA.length < teamSize || teamB.length < teamSize) {
+        const player = queue.shift();
+        if (teamA.length < teamB.length) {
+            teamA.push(player);
+        } else {
+            teamB.push(player);
+        }
+    }
+    renderAll();
 }
 
 function toggleSkip(playerId) {
     const player = players.find(p => p.id === playerId);
     player.skip = !player.skip;
+    // Remove player from queue or teams when toggling skip on
+    if (player.skip) {
+        queue = queue.filter(p => p.id !== playerId);
+        teamA = teamA.filter(p => p.id !== playerId);
+        teamB = teamB.filter(p => p.id !== playerId);
+    }
+    // Add player back to the top of the queue when toggling skip off
+    if (!player.skip && !queue.includes(player)) {
+        queue.unshift(player);
+    }
     renderAll();
 }
 
@@ -333,6 +366,12 @@ document.addEventListener('DOMContentLoaded', function() {
         maxStreak = parseInt(this.value);
     });
 
+    document.addEventListener('dragend', function(e) {
+        if (e.target.tagName && e.target.tagName.toLowerCase() === 'li') {
+            e.target.classList.remove('ctp-li-dragging');
+        }
+    }, true);
+
     const form = document.getElementById('add-player-form');
     const input = document.getElementById('player-name-input');
     form.addEventListener('submit', function(e) {
@@ -344,5 +383,6 @@ document.addEventListener('DOMContentLoaded', function() {
             input.focus();
         }
     });
+    updateTeamSize();
     renderAll();
 });
