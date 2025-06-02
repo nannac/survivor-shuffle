@@ -9,19 +9,12 @@ let teamSize = 2;
 let maxStreak = 0;
 
 function startRound() {
-    // Check the length of the teamA and teamB arrays
-    if (teamA.length < teamSize || teamB.length < teamSize) {
-        // Move players from queue to teamA and teamB alternating until both teams are full
-        while (teamA.length < teamSize || teamB.length < teamSize) {
-            if (queue.length > 0) {
-                let player = queue.shift();
-                if (teamA.length < teamSize) {
-                    teamA.push(player);
-                } else if (teamB.length < teamSize) {
-                    teamB.push(player);
-                }
-            }
-        }
+    // Find the number of open slots in teamA and teamB
+    let openSlots = teamA.filter(player => player.id === null).length + teamB.filter(player => player.id === null).length;
+
+    if (openSlots > 0) {
+        alert('You must assign players to teams to start a round.')
+        return;
     }
     document.getElementById('start-round-btn').classList.add('hidden');
     document.getElementById('team-a-wins-btn').classList.remove('hidden');
@@ -32,12 +25,12 @@ function startRound() {
 
 function updateTeamSize() {
     teamSize = document.getElementById('team_size').value;
-    if (teamA.length > teamSize) {
+    if (teamA.length < teamSize) {
         while (teamA.length < teamSize) {
             teamA.push({ id: null, name: 'Open', wins: null, losses: null, streak: null, skip: null });
         }
     }
-    if (teamB.length > teamSize) {
+    if (teamB.length < teamSize) {
         while (teamB.length < teamSize) {
             teamB.push({ id: null, name: 'Open', wins: null, losses: null, streak: null, skip: null });
         }
@@ -80,21 +73,23 @@ function removePlayer(id) {
     renderQueue();
     renderTeams();
 }
-function swapPlayers(arr1, id1, arr2, id2) {
-    const player1 = arr1.find(player => player.id === id1);
-    const player2 = arr2.find(player => player.id === id2);
-    const index1 = arr1.indexOf(player1);
-    const index2 = arr2.indexOf(player2);
-    // if arr1 is empty, add the player to arr1
-    if (arr1.length < index1) {
-        arr1.push(player2);
-    } else {
+function swapPlayers(arr1, index1, arr2, index2) {
+    const player1 = arr1[index1];
+    const player2 = arr2[index2];
+
+    // If swapping with an open slot (player2 is an open slot)
+    if (player2 && player2.id === null) {
+        // Remove player1 from its original array
+        arr1.splice(index1, 1);
+        // Replace the open slot at index2 with player1
+        arr2.splice(index2, 1, player1);
+    } else if (arr1 === arr2) {
+        // Regular swap within the same array
         arr1[index1] = player2;
-    }
-    // if arr2 is empty, add the player to arr2
-    if (arr2.length < index2) {
-        arr2.push(player1);
+        arr2[index2] = player1;
     } else {
+        // Regular swap between arrays
+        arr1[index1] = player2;
         arr2[index2] = player1;
     }
     renderPlayers();
@@ -126,10 +121,10 @@ function renderPlayers() {
         let tableHTML = `<table class="min-w-full text-sm text-left">
           <thead>
             <tr>
-              <th class="px-3 py-2 cursor-pointer" onclick="window.playerTableSort.key='name';window.playerTableSort.asc=window.playerTableSort.key==='name'? !window.playerTableSort.asc : true;renderPlayers();">Name</th>
-              <th class="px-3 py-2 text-center cursor-pointer" onclick="window.playerTableSort.key='wins';window.playerTableSort.asc=window.playerTableSort.key==='wins'? !window.playerTableSort.asc : true;renderPlayers();">Wins</th>
-              <th class="px-3 py-2 text-center cursor-pointer" onclick="window.playerTableSort.key='losses';window.playerTableSort.asc=window.playerTableSort.key==='losses'? !window.playerTableSort.asc : true;renderPlayers();">Losses</th>
-              <th class="px-3 py-2 text-center cursor-pointer" onclick="window.playerTableSort.key='streak';window.playerTableSort.asc=window.playerTableSort.key==='streak'? !window.playerTableSort.asc : true;renderPlayers();">Streak</th>
+              <th class="px-3 py-2 cursor-pointer" onclick="if(window.playerTableSort.key==='name'){window.playerTableSort.asc=!window.playerTableSort.asc;}else{window.playerTableSort.key='name';window.playerTableSort.asc=false;}renderPlayers();">Name</th>
+              <th class="px-3 py-2 text-center cursor-pointer" onclick="if(window.playerTableSort.key==='wins'){window.playerTableSort.asc=!window.playerTableSort.asc;}else{window.playerTableSort.key='wins';window.playerTableSort.asc=false;}renderPlayers();">Wins</th>
+              <th class="px-3 py-2 text-center cursor-pointer" onclick="if(window.playerTableSort.key==='losses'){window.playerTableSort.asc=!window.playerTableSort.asc;}else{window.playerTableSort.key='losses';window.playerTableSort.asc=false;}renderPlayers();">Losses</th>
+              <th class="px-3 py-2 text-center cursor-pointer" onclick="if(window.playerTableSort.key==='streak'){window.playerTableSort.asc=!window.playerTableSort.asc;}else{window.playerTableSort.key='streak';window.playerTableSort.asc=false;}renderPlayers();">Streak</th>
               <th class="px-3 py-2 text-center">Controls</th>
             </tr>
           </thead>
@@ -164,9 +159,6 @@ function renderQueue() {
         queueList.innerHTML = '<li class="text-gray-400 text-center py-4">No players in queue.</li>';
     } else {
         queue.forEach((player) => {
-            if (player.skip) {
-                return;
-            }
             const li = document.createElement('li');
             li.classList.add('ctp-li', 'queue-li');
             li.setAttribute('draggable', 'true');
@@ -190,61 +182,46 @@ function renderTeams() {
     const teamBList = document.getElementById('team-b-list');
     teamAList.innerHTML = '';
     teamBList.innerHTML = '';
-
-    if (teamA.length < teamSize) {
-        for (let i = 0; i < teamSize; i++) {
-            const li = document.createElement('li');
+    teamA.forEach((player) => {
+        const li = document.createElement('li');
+        if (player.id === null) {
             li.classList.add('drag-placeholder');
-            li.textContent = 'Open';    
-            li.setAttribute('data-array', 'teamA');
-            li.setAttribute('data-player-id', i);
-            teamAList.appendChild(li);
+        } else {
+            li.classList.add('ctp-li', 'queue-li');
         }
-    } else {
-        teamA.forEach((player) => {
-            const li = document.createElement('li');
-            li.classList.add('ctp-li', 'team-li');
-            li.setAttribute('draggable', 'true');
-            li.setAttribute('ondragstart', 'handleOnDrag(event)')
-            li.setAttribute('data-player-id', player.id);
-            li.setAttribute('data-array', 'teamA');
-            li.textContent = player.name;
-            li.addEventListener('dragstart', () => {
-                li.classList.add('ctp-li-dragging');
-            });
-            li.addEventListener('dragend', () => {
-                li.classList.remove('ctp-li-dragging');
-            });
-            teamAList.appendChild(li);
+        li.setAttribute('draggable', 'true');
+        li.setAttribute('ondragstart', 'handleOnDrag(event)')
+        li.setAttribute('data-player-id', player.id);
+        li.setAttribute('data-array', 'teamA');
+        li.textContent = player.name;
+        li.addEventListener('dragstart', () => {
+            li.classList.add('ctp-li-dragging');
         });
-    }
-    if (teamB.length < teamSize) {
-        for (let i = 0; i < teamSize; i++) {
-            const li = document.createElement('li');
+        li.addEventListener('dragend', () => {
+            li.classList.remove('ctp-li-dragging');
+        });
+        teamAList.appendChild(li);
+    });
+    teamB.forEach((player) => {
+        const li = document.createElement('li');
+        if (player.id === null) {
             li.classList.add('drag-placeholder');
-            li.textContent = 'Open';    
-            li.setAttribute('data-array', 'teamB');
-            li.setAttribute('data-player-id', i);
-            teamBList.appendChild(li);
+        } else {
+            li.classList.add('ctp-li', 'queue-li');
         }
-    } else {
-        teamB.forEach((player) => {
-            const li = document.createElement('li');
-            li.classList.add('ctp-li', 'team-li');
-            li.setAttribute('draggable', 'true');
-            li.setAttribute('ondragstart', 'handleOnDrag(event)')
-            li.setAttribute('data-player-id', player.id);
-            li.setAttribute('data-array', 'teamB');
-            li.textContent = player.name;
-            li.addEventListener('dragstart', () => {
-                li.classList.add('ctp-li-dragging');
-            });
-            li.addEventListener('dragend', () => {
-                li.classList.remove('ctp-li-dragging');
-            });
-            teamBList.appendChild(li);
+        li.setAttribute('draggable', 'true');
+        li.setAttribute('ondragstart', 'handleOnDrag(event)')
+        li.setAttribute('data-player-id', player.id);
+        li.setAttribute('data-array', 'teamB');
+        li.textContent = player.name;
+        li.addEventListener('dragstart', () => {
+            li.classList.add('ctp-li-dragging');
         });
-    }
+        li.addEventListener('dragend', () => {
+            li.classList.remove('ctp-li-dragging');
+        });
+        teamBList.appendChild(li);
+    });
 }
 
 function renderAll() {
@@ -269,42 +246,80 @@ document.addEventListener('dragleave', function(e) {
 
 function handleOnDrag(e) {
     e.target.classList.add('ctp-li-dragging');
+    const parent = e.target.parentElement;
+    const children = Array.from(parent.children);
+    const index = children.indexOf(e.target);
     const payload = JSON.stringify({
         arrayName: e.target.dataset.array,
-        playerId: parseInt(e.target.dataset.playerId, 10)
+        index: index
     });
     e.dataTransfer.setData('application/json', payload);
 }
-
-document.addEventListener('dragend', function(e) {
-    if (e.target.tagName && e.target.tagName.toLowerCase() === 'li') {
-        e.target.classList.remove('ctp-li-dragging');
-    }
-}, true);
 
 function handleOnDrop(e) {
     e.preventDefault();
     const payload = JSON.parse(e.dataTransfer.getData('application/json'));
     const targetArrayName = e.target.dataset.array;
-    let targetplayerId = parseInt(e.target.dataset.playerId);
-    if (targetplayerId === null) {
-        targetplayerId = targetArray.length;
-    }
-    const sourceArrayName = payload.arrayName;
-    const sourceplayerId = parseInt(payload.playerId);
     const arrayMap = { teamA, teamB, queue };
+    const sourceArrayName = payload.arrayName;
     const sourceArray = arrayMap[sourceArrayName];
     const targetArray = arrayMap[targetArrayName];
-    swapPlayers(sourceArray, sourceplayerId, targetArray, targetplayerId);
+    const parent = e.target.parentElement;
+    const children = Array.from(parent.children);
+    const targetIndex = children.indexOf(e.target);
+    const sourceIndex = payload.index;
+    swapPlayers(sourceArray, sourceIndex, targetArray, targetIndex);
 }
 
-function handleTeamWin(winningTeam) {
-    
+function handleTeamWin(teamName) {
+    const [winningTeam, losingTeam] = teamName === 'teamA' ? [teamA, teamB] : [teamB, teamA];
+    losingTeam.forEach(player => {
+        player.losses++;
+        player.streak = 0;
+        queue.push(player);
+    });
+    losingTeam.length = 0;
+    winningTeam.forEach((player, i) => {
+        player.wins++;
+        player.streak++;
+        // alternate winning players to different teams
+        if (teamA.includes(player)) {
+            teamB.push(player);
+            teamA.splice(teamA.indexOf(player), 1);
+        } else {
+            teamA.push(player);
+            teamB.splice(teamB.indexOf(player), 1);
+        }
+    });
+    // While either teamA or teamB has less than teamSize players, move players from queue to fill the gap
+    while (teamA.length < teamSize || teamB.length < teamSize) {
+        const player = queue.shift();
+        if (teamA.length < teamB.length) {
+            teamA.push(player);
+        } else {
+            teamB.push(player);
+        }
+    }
+    renderAll();
 }
 
 function toggleSkip(playerId) {
     const player = players.find(p => p.id === playerId);
-    player.skip = !player.skip;
+    if (player.skip) {
+        player.skip = false;
+        queue.unshift(player);
+    } else {
+        player.skip = true;
+        if (queue.includes(player)) {
+            queue.splice(queue.indexOf(player), 1);
+        }
+        if (teamA.includes(player)) {
+            teamA.splice(teamA.indexOf(player), 1);
+        }
+        if (teamB.includes(player)) {
+            teamB.splice(teamB.indexOf(player), 1);
+        }
+    }
     renderAll();
 }
 
@@ -333,6 +348,12 @@ document.addEventListener('DOMContentLoaded', function() {
         maxStreak = parseInt(this.value);
     });
 
+    document.addEventListener('dragend', function(e) {
+        if (e.target.tagName && e.target.tagName.toLowerCase() === 'li') {
+            e.target.classList.remove('ctp-li-dragging');
+        }
+    }, true);
+
     const form = document.getElementById('add-player-form');
     const input = document.getElementById('player-name-input');
     form.addEventListener('submit', function(e) {
@@ -344,5 +365,6 @@ document.addEventListener('DOMContentLoaded', function() {
             input.focus();
         }
     });
+    updateTeamSize();
     renderAll();
 });
