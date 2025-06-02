@@ -5,68 +5,86 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Survivor Shuffle | Custom Match Tracker</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/main.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="static/main.js"></script>
 </head>
-<body class="bg-gray-100">
+<body>
   <div class="max-w-7xl mx-auto px-2">
-    <h1 class="text-3xl font-bold text-center text-blue-700 mt-12 mb-12">Survivor Shuffle</h1>
-    <div class="flex flex-col md:flex-row gap-6">
+    <div class="flex justify-center mt-4 mb-4">
+  <img src="static/images/logo.png" alt="Survivor Shuffle Logo" class="h-36 md:h-48" />
+</div>
+    <div class="flex flex-col md:flex-row gap-6 min-h-screen">
       <!-- Main Left Column -->
-      <div class="flex-1 min-w-0">
+      <div class="flex-1 min-w-0 flex flex-col h-full">
         <!-- Configuration Section -->
-        <div class="bg-white rounded-lg shadow p-4 mb-6 relative">
-          <button onclick="resetAll()" id="config-float-btn" class="absolute right-4 top-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-red-400 z-10">Reset</button>
+        <div class="ctp-container rounded-lg shadow p-4 mb-6 relative">
+          <h2 class="ctp-title font-semibold mb-2" style="color: var(--ctp-text) !important;">Match</h2>
+          <hr style="border: none; height: 3px; background: var(--ctp-text); border-radius: 2px; margin-bottom: 1rem; width: 100%;" />
+
           <div class="flex items-center gap-4 flex-wrap">
-            <label for="team_size" class="font-medium text-gray-700">Team Size</label>
-            <select id="team_size" name="team_size" class="w-12 px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-              <option value="1">1</option>
-              <option value="2" selected>2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-            </select>
-            <label for="max-streak-input" class="font-medium text-gray-700">Max Streak</label>
-            <input id="max-streak-input" name="max_streak" type="text" maxlength="2" placeholder="0" value="0" class="w-12 px-2 py-2 border rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <div class="flex items-center gap-4 flex-grow">
+              <label for="team_size" class="ctp-label font-medium">Team Size</label>
+              <select id="team_size" name="team_size" class="w-12 px-2 py-2 ctp-input border rounded-lg focus:outline-none focus:ring-2">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+              </select>
+              <label for="max-streak-input" class="ctp-label font-medium">Max Streak</label>
+              <input id="max-streak-input" name="max_streak" type="text" maxlength="2" placeholder="0" value="0" class="w-12 px-2 py-2 ctp-input border rounded-lg text-center focus:outline-none focus:ring-2" />
+            </div>
+            <div class="flex gap-2 justify-end">
+              <button id="start-round-btn" class="px-6 py-2 ctp-btn-green rounded-lg shadow focus:outline-none focus:ring-2">Start Round</button>
+              <button id="team-a-wins-btn" class="px-6 py-2 ctp-btn-blue rounded-lg shadow focus:outline-none focus:ring-2 hidden">Team A Wins</button>
+              <button id="team-b-wins-btn" class="px-6 py-2 ctp-btn-yellow rounded-lg shadow focus:outline-none focus:ring-2 hidden">Team B Wins</button>
+            </div>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="bg-white rounded-lg shadow p-4">
-            <h2 class="text-xl font-semibold text-gray-800 mb-2">Team A</h2>
+          <div class="ctp-container rounded-lg shadow p-4">
+            <h2 class="ctp-title font-semibold mb-2" style="color: var(--ctp-blue) !important;">Team A</h2>
+            <hr style="border: none; height: 3px; background: var(--ctp-blue); border-radius: 2px; margin-bottom: 1rem; width: 100%;" />
             <ul id="team-a-list" ondrop="handleOnDrop(event)" ondragover="allowDrop(event)"></ul>
           </div>
-          <div class="bg-white rounded-lg shadow p-4">
-            <h2 class="text-xl font-semibold text-gray-800 mb-2">Team B</h2>
+          <div class="ctp-container rounded-lg shadow p-4">
+            <h2 class="ctp-title font-semibold mb-2" style="color: var(--ctp-yellow) !important;">Team B</h2>
+            <hr style="border: none; height: 3px; background: var(--ctp-yellow); border-radius: 2px; margin-bottom: 1rem; width: 100%;" />
             <ul id="team-b-list" ondrop="handleOnDrop(event)" ondragover="allowDrop(event)"></ul>
           </div>
-          <div class="bg-white rounded-lg shadow p-4">
-            <h2 class="text-xl font-semibold text-gray-800 mb-2">Queue</h2>
+          <div class="ctp-container rounded-lg shadow p-4">
+            <h2 class="ctp-title font-semibold mb-2" style="color: var(--ctp-text) !important;">Queue</h2>
+            <hr style="border: none; height: 3px; background: var(--ctp-text); border-radius: 2px; margin-bottom: 1rem; width: 100%;" />
             <ul id="queue-list" ondrop="handleOnDrop(event)" ondragover="allowDrop(event)"></ul>
           </div>
         </div>
-        <div class="mb-6 flex gap-4">
-          <button id="team-a-wins-btn" class="flex-1 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400">Team A Wins</button>
-          <button id="team-b-wins-btn" class="flex-1 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-red-400">Team B Wins</button>
+        <div id="wins-btn-row" class="mb-6 flex gap-4 hidden">
+          <button id="team-a-wins-btn" class="flex-1 px-6 py-2 ctp-btn-blue font-semibold rounded-lg shadow focus:outline-none focus:ring-2">Team A Wins</button>
+          <button id="team-b-wins-btn" class="flex-1 px-6 py-2 ctp-btn-yellow font-semibold rounded-lg shadow focus:outline-none focus:ring-2">Team B Wins</button>
         </div>
       </div>
       <!-- Players Block Right Column -->
-      <div class="w-full md:w-96 flex-shrink-0">
-        <div class="bg-white rounded-lg shadow p-4 mb-8 h-full">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Players</h2>
+      <div class="w-full md:w-96 flex-shrink-0 flex flex-col h-full">
+        <div class="ctp-container rounded-lg shadow p-4 mb-8 h-full flex flex-col">
+          <h2 class="ctp-title font-semibold mb-2" style="color: var(--ctp-text) !important;">Players</h2>
+          <hr style="border: none; height: 3px; background: var(--ctp-text); border-radius: 2px; margin-bottom: 1rem; width: 100%;" />
           <form id="add-player-form" class="flex items-center gap-2 mb-6" method="post" onsubmit="return false;">
-            <input id="player-name-input" type="text" name="player_name" placeholder="Enter player name" class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
+            <input id="player-name-input" type="text" name="player_name" placeholder="Enter player name" class="flex-1 px-4 py-2 ctp-input border rounded-lg focus:outline-none focus:ring-2" required>
+            <button type="submit" class="px-4 py-2 ctp-btn-blue rounded-lg">Add</button>
           </form>
-          <ul id="players-list"></ul>
+          <div id="players-list" class="flex-1"></div>
         </div>
       </div>
     </div>
   </div>
-  <script src="static/main.js"></script>
-
+ 
   <!-- Floating Help Button -->
-  <button id="help-btn" class="fixed top-5 right-5 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-2xl">?</button>
+  <button id="help-btn" class="fixed top-5 right-5 z-50 ctp-btn-help text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg focus:outline-none text-2xl">?</button>
 
   <!-- Help Modal -->
   <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
@@ -85,5 +103,8 @@
       <p class="mt-4 text-sm text-gray-500">All changes are local and not saved after closing the page.</p>
     </div>
   </div>
+  <footer class="w-full text-center py-4 mt-8" style="color: var(--ctp-subtext1); font-size: 0.9rem;">
+    © 2025 Christopher Nanna. All rights reserved.
+  </footer>
 </body>
 </html>
