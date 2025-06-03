@@ -295,6 +295,10 @@ function handleOnDrop(e) {
 
 function handleTeamWin(teamName) {
     const [winningTeam, losingTeam] = teamName === 'teamA' ? [teamA, teamB] : [teamB, teamA];
+    if (winningTeam.length < teamSize || losingTeam.length < teamSize) {
+        alert('You must assign players to teams to start a round.')
+        return;
+    }
     losingTeam.forEach(player => {
         player.losses++;
         player.streak = 0;
