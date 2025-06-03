@@ -130,6 +130,27 @@ li {
   text-transform: uppercase;
   font-size: 1rem;
 }
+
+h1.ctp-title {
+  font-size: 3rem;
+  line-height: 1.1;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  background: linear-gradient(90deg, var(--ctp-blue, #2563eb) 10%, var(--ctp-yellow, #f9e2af) 90%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  /* Multi-layered shadow for depth and glow */
+  text-shadow:
+    0 2px 8px rgba(37,99,235,0.16),
+    0 4px 16px rgba(249,226,175,0.16),
+    0 1px 0 #fff,
+    0 0 2px #000a,
+    0 8px 24px rgba(0,0,0,0.20);
+}
+
+
 .ctp-li {
   transition: background 0.15s, box-shadow 0.15s, border 0.15s;
   cursor: grab;
