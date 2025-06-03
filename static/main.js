@@ -108,7 +108,7 @@ function renderPlayers() {
     const playersList = document.getElementById('players-list');
     playersList.innerHTML = '';
     if (players.length === 0) {
-        playersList.innerHTML = '<div class="text-gray-400 text-center py-4">No players yet.</div>';
+        playersList.innerHTML = '<div class="text-gray-400 text-center py-4">Add players.</div>';
     } else {
         // Table sorting state
         if (!window.playerTableSort) {
@@ -163,7 +163,7 @@ function renderQueue() {
     const queueList = document.getElementById('queue-list');
     queueList.innerHTML = '';
     if (queue.length === 0) {
-        queueList.innerHTML = '<li class="text-gray-400 text-center py-4">No players in queue.</li>';
+        queueList.innerHTML = '<li class="text-gray-400 text-center py-4">Add players.</li>';
     } else {
         queue.forEach((player) => {
             if (player.skip) {
