@@ -73,6 +73,11 @@ function addPlayer(name) {
         streak: 0,
         skip: false,
     };
+    // Check if player already exists
+    if (players.some(p => p.name === name)) {
+        alert('Player already exists.');
+        return;
+    }
     players.push(newPlayer);
     queue.push(newPlayer);
     renderPlayers();
