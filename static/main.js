@@ -302,12 +302,16 @@ function handleTeamWin(teamName) {
     losingTeam.forEach(player => {
         player.losses++;
         player.streak = 0;
-        queue.push(player);
     });
+    queue.push(...losingTeam);
     losingTeam.length = 0;
+    const winningPlayers = [];
     winningTeam.forEach((player, i) => {
         player.wins++;
         player.streak++;
+        winningPlayers.push(player);
+    });
+    winningPlayers.forEach(player => {
         // alternate winning players to different teams
         if (teamA.includes(player)) {
             teamB.push(player);
