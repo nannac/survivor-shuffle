@@ -311,16 +311,17 @@ function handleTeamWin(teamName) {
         player.streak++;
         winningPlayers.push(player);
     });
-    winningPlayers.forEach(player => {
+    teamA.length = 0;
+    teamB.length = 0;
+    winningPlayers.forEach((player, i) => {
         // alternate winning players to different teams
-        if (teamA.includes(player)) {
-            teamB.push(player);
-            teamA.splice(teamA.indexOf(player), 1);
-        } else {
+        if (i % 2 === 0) {
             teamA.push(player);
-            teamB.splice(teamB.indexOf(player), 1);
+        } else {
+            teamB.push(player);
         }
     });
+    winningPlayers.length = 0;
     // While either teamA or teamB has less than teamSize players, move players from queue to fill the gap
     while (teamA.length < teamSize || teamB.length < teamSize) {
         const player = queue.shift();
